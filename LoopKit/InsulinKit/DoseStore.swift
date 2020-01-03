@@ -1179,6 +1179,34 @@ extension DoseStore {
             }
         }
     }
+    
+    public func getSampledNormalizedDoseEntries(start: Date, end: Date? = nil, period: TimeInterval, completion: @escaping (_ result: DoseStoreResult<[DoseEntry]>) -> Void) {
+        
+        // XXX REMOVE THIS IS WRONG
+        getNormalizedDoseEntries(start: start, end: end) { (result) in
+            guard case .success(let doses) = result else {
+                return completion(result)
+            }
+
+            let resampled = doses.flatMap { entry -> [DoseEntry] in
+                let duration = entry.endDate.timeIntervalSince(entry.startDate)
+                if duration <= period {
+                    return [entry]
+                }
+                let numPeriods = Int((duration/period).rounded(.up))
+                let valuePerPeriod = entry.value / Double(numPeriods)
+                
+                return [Int](0..<numPeriods).map { index in
+                    let startDate = entry.startDate + period*TimeInterval(index)
+                    // XXX: converted to .units here. Should this also remove scheduledBasalRate?
+                    return DoseEntry(type: entry.type, startDate: startDate, endDate: startDate+period, value: valuePerPeriod, unit: .units, deliveredUnits: nil, description: entry.description, syncIdentifier: nil, scheduledBasalRate: entry.scheduledBasalRate)
+                }
+            }
+            completion(.success(resampled))
+        }
+        
+    }
+
 
     /// Retrieves the maximum insulin on-board value from the two timeline values nearest to the specified date
     ///

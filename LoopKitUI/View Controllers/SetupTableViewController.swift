@@ -114,3 +114,5 @@ public extension SetupButton {
         setTitle(LocalizedString("Continue", comment: "Title of the setup button to continue"), for: .normal)
     }
 }
+
+

@@ -8,7 +8,8 @@
 import UIKit
 
 public class SetupButton: UIButton {
-
+    public var testXyz = 123
+    
     public override init(frame: CGRect) {
         super.init(frame: frame)
 
@@ -57,6 +58,53 @@ public class SetupButton: UIButton {
     public override var isEnabled: Bool {
         didSet {
             tintAdjustmentMode = isEnabled ? .automatic : .dimmed
+        }
+    }
+    
+    // MARK: - activity indicator
+    
+    private func newActivityIndicator() -> UIActivityIndicatorView {
+        let activityIndicator = UIActivityIndicatorView()
+        activityIndicator.hidesWhenStopped = true
+        activityIndicator.color = .black
+        return activityIndicator
+    }
+
+    private var savedTitle: String?
+    private var savedIsEnabled: Bool!
+    
+    public var testVar: Bool = false
+    
+    private lazy var activityIndicator = newActivityIndicator()
+    
+    /// Start indicating activity by rendering a `UIActivityIndicatorView` in place of the button's title text.
+    /// The indicator spins until `stopIndicatingActivity` is called.
+    
+    public var isIndicatingActivity: Bool = false {
+        didSet {
+            if oldValue == isIndicatingActivity {
+                return
+            }
+            if isIndicatingActivity {
+                savedTitle = titleLabel?.text
+                savedIsEnabled = isEnabled
+                isEnabled = false
+                setTitle("", for: .normal)
+
+                activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+                self.addSubview(activityIndicator)
+                NSLayoutConstraint.activate([
+                    self.centerXAnchor.constraint(equalTo: activityIndicator.centerXAnchor),
+                    self.centerYAnchor.constraint(equalTo: activityIndicator.centerYAnchor)
+                ])
+                activityIndicator.startAnimating()
+            } else {
+                if let title = savedTitle {
+                    setTitle(title, for: .normal)
+                }
+                isEnabled = savedIsEnabled
+                activityIndicator.stopAnimating()
+            }
         }
     }
 }
